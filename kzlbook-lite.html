@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KzlBook Lite - Doc truyen cho may cu</title>
+<style>
+body{margin:0;padding:0;background:#ffffff;color:#000000;font-family:Georgia,serif;font-size:18px;line-height:1.6}
+#top{background:#222222;color:#ffffff;padding:12px}
+#top a{color:#ffffff}
+#wrap{padding:12px}
+h1{font-size:22px;margin:0 0 8px 0}
+h2{font-size:20px;margin:16px 0 8px 0}
+a{color:#1155cc}
+ul{margin:0;padding:0 0 0 20px}
+li{margin:0 0 10px 0}
+.story{border-bottom:1px solid #cccccc;padding:10px 0}
+.meta{font-size:14px;color:#555555}
+.btn{display:inline-block;border:1px solid #888888;padding:6px 12px;margin:0 6px 6px 0;color:#000000;text-decoration:none;background:#eeeeee}
+#err{color:#aa0000}
+#chap{font-size:18px}
+</style>
+</head>
+<body>
+<div id="top"><b>KzlBook Lite</b> - ban don gian cho may cu | <a href="kzlbook-lite.html">Trang chu</a></div>
+<div id="wrap">
+<div id="view"><p>Dang tai danh sach truyen...</p></div>
+</div>
+<script>
+var BLOG = 'https://3zdeptrai.blogspot.com';
+var stories = [];
+var chapters = [];
+var currentStory = null;
+function esc(s) {
+  s = s || '';
+  s = s.replace(/&/g, '&amp;');
+  s = s.replace(/</g, '&lt;');
+  s = s.replace(/>/g, '&gt;');
+  s = s.replace(/"/g, '&quot;');
+  return s;
+}
+function low(s) { return (s || '').toLowerCase(); }
+function isReserved(l) {
+  var x = low(l).replace(/[\.\s]+$/, '');
+  return x === 'truyen' || x === 'chuong' || x === 'tien-hiep' || x === 'truyen-dich' || x === 'truyen-voz' || x === 'dang-ra' || x.indexOf('quyen-') === 0 || x.indexOf('arc-') === 0 || x.indexOf('the-loai-') === 0;
+}
+function labelsOf(e) {
+  var cats = e.category || [];
+  var out = [];
+  for (var i = 0; i < cats.length; i++) { out.push(cats[i].term); }
+  return out;
+}
+function linkOf(e) {
+  var links = e.link || [];
+  for (var i = 0; i < links.length; i++) {
+    if (links[i].rel === 'alternate') { return links[i].href; }
+  }
+  return '';
+}
+function titleOf(e) { return (e.title && e.title.$t) ? e.title.$t : ''; }
+function dateOf(e) { return (e.published && e.published.$t) ? e.published.$t : ''; }
+function idOf(e) {
+  var id = (e.id && e.id.$t) ? e.id.$t : '';
+  var p = id.split('.');
+  var last = p[p.length - 1];
+  if (last.indexOf('post-') === 0) { return last.substring(5); }
+  return last;
+}
+function slugOf(labels) {
+  for (var i = 0; i < labels.length; i++) {
+    if (!isReserved(labels[i])) { return labels[i]; }
+  }
+  return '';
+}
+function chapNum(t) {
+  var m = (t || '').match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 999999;
+}
+function isChapterTitle(t) {
+  return /^(ch\u01b0\u01a1ng|chap)/i.test(t || '');
+}
+function loadScript(url) {
+  var s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.src = url;
+  document.getElementsByTagName('head')[0].appendChild(s);
+}
+function getParam(name) {
+  var q = window.location.search || '';
+  if (q.charAt(0) === '?') { q = q.substring(1); }
+  var parts = q.split('&');
+  for (var i = 0; i < parts.length; i++) {
+    var kv = parts[i].split('=');
+    if (kv[0] === name) { return decodeURIComponent(kv[1] || ''); }
+  }
+  return '';
+}
+function show(html) {
+  document.getElementById('view').innerHTML = html;
+}
+function showError() {
+  show('<p id="err">Khong tai duoc danh sach. Hay bam tai lai trang.</p><p><a class="btn" href="javascript:window.location.reload()">Tai lai</a></p>');
+}
+function storyBySlug(slug) {
+  for (var i = 0; i < stories.length; i++) {
+    if (stories[i].slug === slug) { return stories[i]; }
+  }
+  return null;
+}
+function chapSlug(labels) {
+  for (var i = 0; i < labels.length; i++) {
+    if (!isReserved(labels[i])) { return labels[i]; }
+  }
+  return '';
+}
+function chaptersOf(story) {
+  var out = [];
+  for (var i = 0; i < chapters.length; i++) {
+    var c = chapters[i];
+    var cs = low(chapSlug(c.labels)).replace(/[\.\s]+$/, '');
+    if (!cs) { continue; }
+    for (var j = 0; j < story.labels.length; j++) {
+      if (low(story.labels[j]).replace(/[\.\s]+$/, '') === cs) { out.push(c); break; }
+    }
+  }
+  out.sort(function (a, b) { return a.num - b.num; });
+  return out;
+}
+function renderHome() {
+  var html = '<h1>Danh sach truyen</h1>';
+  if (!stories.length) { html += '<p>Chua co truyen.</p>'; }
+  for (var i = 0; i < stories.length; i++) {
+    var s = stories[i];
+    html += '<div class="story"><a href="kzlbook-lite.html?story=' + esc(s.slug) + '"><b>' + esc(s.title) + '</b></a>';
+    html += '<div class="meta">Cap nhat: ' + esc(s.date.substring(0, 10)) + '</div></div>';
+  }
+  html += '<p class="meta">Ban lite: chi chu va danh sach, khong anh, khong slider, khong script hien dai. Doc tren trinh duyet moi van dung ban day du o 3zdeptrai.blogspot.com.</p>';
+  show(html);
+}
+function renderStory() {
+  var slug = getParam('story');
+  var st = storyBySlug(slug);
+  if (!st) { renderHome(); return; }
+  currentStory = st;
+  var list = chaptersOf(st);
+  var html = '<p><a href="kzlbook-lite.html">&laquo; Danh sach truyen</a></p>';
+  html += '<h1>' + esc(st.title) + '</h1>';
+  html += '<p class="meta">So chuong: ' + list.length + '</p><ul>';
+  for (var i = 0; i < list.length; i++) {
+    html += '<li><a href="kzlbook-lite.html?post=' + list[i].id + '&story=' + esc(slug) + '">' + esc(list[i].title) + '</a></li>';
+  }
+  html += '</ul>';
+  show(html);
+}
+function renderChapter(data) {
+  var entry = null;
+  if (data.feed && data.feed.entry) { entry = data.feed.entry[0]; }
+  else if (data.entry) { entry = data.entry; }
+  if (!entry) { showError(); return; }
+  var body = (entry.content && entry.content.$t) ? entry.content.$t : '';
+  var slug = getParam('story');
+  var html = '<p><a href="kzlbook-lite.html">&laquo; Danh sach truyen</a>';
+  if (slug) { html += ' | <a href="kzlbook-lite.html?story=' + esc(slug) + '">&laquo; Muc luc</a>'; }
+  html += '</p>';
+  html += '<h1>' + esc(titleOf(entry)) + '</h1>';
+  html += '<p><a class="btn" href="javascript:kzlBigger()">Chu to hon</a><a class="btn" href="javascript:kzlSmaller()">Chu nho hon</a></p>';
+  html += '<div id="chap">' + body + '</div>';
+  var st = storyBySlug(slug);
+  if (st) {
+    var list = chaptersOf(st);
+    var me = idOf(entry);
+    var prev = null;
+    var next = null;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === me) {
+        if (i > 0) { prev = list[i - 1]; }
+        if (i + 1 < list.length) { next = list[i + 1]; }
+      }
+    }
+    html += '<p>';
+    if (prev) { html += '<a class="btn" href="kzlbook-lite.html?post=' + prev.id + '&story=' + esc(slug) + '">&laquo; Chuong truoc</a>'; }
+    if (next) { html += '<a class="btn" href="kzlbook-lite.html?post=' + next.id + '&story=' + esc(slug) + '">Chuong sau &raquo;</a>'; }
+    html += '</p>';
+  }
+  show(html);
+}
+var chapSize = 18;
+function kzlBigger() {
+  chapSize = chapSize + 2;
+  var el = document.getElementById('chap');
+  if (el) { el.style.fontSize = chapSize + 'px'; }
+}
+function kzlSmaller() {
+  if (chapSize > 12) { chapSize = chapSize - 2; }
+  var el = document.getElementById('chap');
+  if (el) { el.style.fontSize = chapSize + 'px'; }
+}
+function kzlStories(data) {
+  var entries = (data.feed && data.feed.entry) ? data.feed.entry : [];
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i];
+    var labs = labelsOf(e);
+    var slug = slugOf(labs);
+    if (!slug) { continue; }
+    stories.push({ title: titleOf(e), url: linkOf(e), slug: slug, labels: labs, date: dateOf(e) });
+  }
+  stories.sort(function (a, b) { return (a.date < b.date) ? 1 : -1; });
+  loadScript(BLOG + '/feeds/posts/default?alt=json-in-script&callback=kzlAll&max-results=150');
+}
+function kzlAll(data) {
+  var entries = (data.feed && data.feed.entry) ? data.feed.entry : [];
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i];
+    var t = titleOf(e);
+    var labs = labelsOf(e);
+    var hasTruyen = false;
+    for (var k = 0; k < labs.length; k++) {
+      if (low(labs[k]) === 'truyen') { hasTruyen = true; }
+    }
+    if (hasTruyen) { continue; }
+    var isArc = false;
+    for (var a = 0; a < labs.length; a++) {
+      if (low(labs[a]).indexOf('arc-') === 0) { isArc = true; }
+    }
+    if (!isChapterTitle(t) && !isArc) { continue; }
+    chapters.push({ title: t, id: idOf(e), url: linkOf(e), labels: labs, date: dateOf(e), num: chapNum(t) });
+  }
+  var post = getParam('post');
+  if (post) {
+    loadScript(BLOG + '/feeds/posts/default/' + post + '?alt=json-in-script&callback=kzlChapter');
+  } else if (getParam('story')) {
+    renderStory();
+  } else {
+    renderHome();
+  }
+}
+function kzlChapter(data) { renderChapter(data); }
+window.setTimeout(function () {
+  var v = document.getElementById('view');
+  if (v && v.innerHTML.indexOf('Dang tai') !== -1) { showError(); }
+}, 20000);
+loadScript(BLOG + '/feeds/posts/summary/-/truyen?alt=json-in-script&callback=kzlStories&max-results=50');
+</script>
+</body>
+</html>
