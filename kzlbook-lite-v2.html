@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KzlBook Lite v2 - Core UI</title>
+<title>KzlBook Lite v2 - Đọc truyện cho máy cũ</title>
 <style>
-/* KZL Core UI v2: mobile-first, ES5, khong var(), khong flex, khong anh nen.
-   Mau lay tu theme 3zdeptrai mobile: header #08102b, nen noi dung #fffdfc, chu #1d2129, link #1976d2.
-   Cung 1 core nay se dung lai cho KZL TV (danh sach kenh -> phat) va KZL App (danh sach module -> mo). */
+/* KZL Core UI v2: mobile-first, ES5, không var(), không flex, không ảnh nền.
+   Màu lấy từ theme 3zdeptrai mobile: header #08102b, nền nội dung #fffdfc, chữ #1d2129, link #1976d2.
+   Cùng 1 core này sẽ dùng lại cho KZL TV (danh sách kênh -> phát) và KZL App (danh sách module -> mở). */
 body{margin:0;padding:0;background:#fffdfc;color:#1d2129;font-family:Georgia,serif;font-size:18px;line-height:1.6}
 #top{background:#08102b;color:#ffffff;padding:12px}
 #top b{font-size:20px}
@@ -29,9 +29,9 @@ li a{display:block;padding:10px 0}
 </style>
 </head>
 <body>
-<div id="top"><b>KzlBook</b> | <a href="kzlbook-lite-v2.html">Trang chu</a></div>
+<div id="top"><b>KzlBook</b> | <a href="kzlbook-lite-v2.html">Trang chủ</a></div>
 <div id="wrap">
-<div id="view"><p>Dang tai danh sach truyen...</p></div>
+<div id="view"><p>Đang tải danh sách truyện...</p></div>
 </div>
 <script>
 var BLOG = 'https://3zdeptrai.blogspot.com';
@@ -106,7 +106,7 @@ function show(html) {
   document.getElementById('view').innerHTML = html;
 }
 function showError() {
-  show('<p id="err">Khong tai duoc danh sach. Hay bam tai lai trang.</p><p><a class="btn" href="javascript:window.location.reload()">Tai lai</a></p>');
+  show('<p id="err">Không tải được danh sách. Hãy bấm tải lại trang.</p><p><a class="btn" href="javascript:window.location.reload()">Tải lại</a></p>');
 }
 function storyBySlug(slug) {
   for (var i = 0; i < stories.length; i++) {
@@ -134,14 +134,14 @@ function chaptersOf(story) {
   return out;
 }
 function renderHome() {
-  var html = '<h1>Danh sach truyen</h1>';
-  if (!stories.length) { html += '<p>Chua co truyen.</p>'; }
+  var html = '<h1>Danh sách truyện</h1>';
+  if (!stories.length) { html += '<p>Chưa có truyện.</p>'; }
   for (var i = 0; i < stories.length; i++) {
     var s = stories[i];
     html += '<div class="story">';
     if (s.thumb) { html += '<img src="' + esc(s.thumb) + '" alt="">'; }
     html += '<a href="kzlbook-lite-v2.html?story=' + esc(s.slug) + '"><b>' + esc(s.title) + '</b></a>';
-    html += '<div class="meta">Cap nhat: ' + esc(s.date.substring(0, 10)) + '</div></div>';
+    html += '<div class="meta">Cập nhật: ' + esc(s.date.substring(0, 10)) + '</div></div>';
   }
   show(html);
 }
@@ -151,9 +151,9 @@ function renderStory() {
   if (!st) { renderHome(); return; }
   currentStory = st;
   var list = chaptersOf(st);
-  var html = '<p><a href="kzlbook-lite-v2.html">&laquo; Danh sach truyen</a></p>';
+  var html = '<p><a href="kzlbook-lite-v2.html">&laquo; Danh sách truyện</a></p>';
   html += '<h1>' + esc(st.title) + '</h1>';
-  html += '<p class="meta">So chuong: ' + list.length + '</p><ul>';
+  html += '<p class="meta">Số chương: ' + list.length + '</p><ul>';
   for (var i = 0; i < list.length; i++) {
     html += '<li><a href="kzlbook-lite-v2.html?post=' + list[i].id + '&story=' + esc(slug) + '">' + esc(list[i].title) + '</a></li>';
   }
@@ -167,11 +167,11 @@ function renderChapter(data) {
   if (!entry) { showError(); return; }
   var body = (entry.content && entry.content.$t) ? entry.content.$t : '';
   var slug = getParam('story');
-  var html = '<p><a href="kzlbook-lite-v2.html">&laquo; Danh sach truyen</a>';
-  if (slug) { html += ' | <a href="kzlbook-lite-v2.html?story=' + esc(slug) + '">&laquo; Muc luc</a>'; }
+  var html = '<p><a href="kzlbook-lite-v2.html">&laquo; Danh sách truyện</a>';
+  if (slug) { html += ' | <a href="kzlbook-lite-v2.html?story=' + esc(slug) + '">&laquo; Mục lục</a>'; }
   html += '</p>';
   html += '<h1>' + esc(titleOf(entry)) + '</h1>';
-  html += '<p><a class="btn" href="javascript:kzlBigger()">Chu to hon</a><a class="btn" href="javascript:kzlSmaller()">Chu nho hon</a></p>';
+  html += '<p><a class="btn" href="javascript:kzlBigger()">Chữ to hơn</a><a class="btn" href="javascript:kzlSmaller()">Chữ nhỏ hơn</a></p>';
   html += '<div id="chap">' + body + '</div>';
   var st = storyBySlug(slug);
   if (st) {
@@ -186,8 +186,8 @@ function renderChapter(data) {
       }
     }
     html += '<p>';
-    if (prev) { html += '<a class="btn" href="kzlbook-lite-v2.html?post=' + prev.id + '&story=' + esc(slug) + '">&laquo; Chuong truoc</a>'; }
-    if (next) { html += '<a class="btn" href="kzlbook-lite-v2.html?post=' + next.id + '&story=' + esc(slug) + '">Chuong sau &raquo;</a>'; }
+    if (prev) { html += '<a class="btn" href="kzlbook-lite-v2.html?post=' + prev.id + '&story=' + esc(slug) + '">&laquo; Chương trước</a>'; }
+    if (next) { html += '<a class="btn" href="kzlbook-lite-v2.html?post=' + next.id + '&story=' + esc(slug) + '">Chương sau &raquo;</a>'; }
     html += '</p>';
   }
   show(html);
@@ -246,7 +246,7 @@ function kzlAll(data) {
 function kzlChapter(data) { renderChapter(data); }
 window.setTimeout(function () {
   var v = document.getElementById('view');
-  if (v && v.innerHTML.indexOf('Dang tai') !== -1) { showError(); }
+  if (v && v.innerHTML.indexOf('Đang tải') !== -1) { showError(); }
 }, 20000);
 loadScript(BLOG + '/feeds/posts/summary/-/truyen?alt=json-in-script&callback=kzlStories&max-results=50');
 </script>
